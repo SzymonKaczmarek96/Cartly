@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.cartly.presentation.loginscreen
 
 import androidx.compose.foundation.background
@@ -8,24 +10,19 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,25 +38,30 @@ import com.example.cartly.R
 @Composable
 fun LoginScreen() {
     Scaffold(
-//        contentWindowInsets = WindowInsets.systemBarsIgnoringVisibility,
-        topBar = {LoginTopBarContent(
-            modifier = Modifier
-        )
-                 },
+        modifier = Modifier
+            .padding(horizontal = 4.dp),
+        topBar = {
+            LoginTopBarContent(modifier = Modifier
+                .padding(horizontal = 4.dp))
+        },
         content = { paddingValues ->
-            LoginContentScreen(paddingValues)
-        }
+            LoginContentScreen(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp),
+                paddingValues = paddingValues
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.secondaryContainer
     )
-
 }
 
 @Composable
-private fun LoginContentScreen(paddingValues: PaddingValues){
+private fun LoginContentScreen(
+    modifier: Modifier,
+    paddingValues: PaddingValues) {
     Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer)
+        modifier = modifier
+            .fillMaxSize()
             .padding(paddingValues)
 
     ) { }
@@ -69,20 +71,16 @@ private fun LoginContentScreen(paddingValues: PaddingValues){
 @Composable
 private fun LoginTopBarContent(
     modifier: Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-        ,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row {
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(MaterialTheme.shapes.extraSmall)
+){
+    CenterAlignedTopAppBar(
+        modifier = modifier,
+        title ={ Text("Login") },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        navigationIcon = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
                     tint = MaterialTheme.colorScheme.onPrimary,
@@ -92,23 +90,21 @@ private fun LoginTopBarContent(
                     painter = painterResource(R.drawable.cartly_icon),
                     contentDescription = "Cartly Icon",
                 )
+
+                Text(
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    text = "Carlty"
+                )
             }
-            Spacer(modifier = Modifier.padding(horizontal = 8.dp))
-            Text(
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-                text = "Carlty"
-            )
-        }
-        Text("Logowanie")
-        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+        },
+        actions = {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(MaterialTheme.shapes.extraSmall)
-
+                    .size(32.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer,
+                        shape = MaterialTheme.shapes.large
+                    )
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
@@ -121,27 +117,23 @@ private fun LoginTopBarContent(
                 )
             }
         }
-    }
-
-
-@Preview
-@Composable
-private fun LoginTopBarContentPreview() {
-    AppTheme(
-        content = { LoginTopBarContent(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) }
     )
 }
 
 @Preview
 @Composable
-private fun LoginScreenPreview(){
+private fun LoginTopBarContentPreview(){
+    LoginTopBarContent(
+        Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+    )
+}
+
+@Preview
+@Composable
+private fun LoginScreenPreview() {
     AppTheme(
         content = {
             LoginScreen()
         }
     )
 }
-
