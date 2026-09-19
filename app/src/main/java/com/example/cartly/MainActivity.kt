@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.app.ui.theme.AppTheme
-import com.example.cartly.presentation.loginscreen.LoginScreen
+import com.example.cartly.presentation.createaccount.CreateAccountScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme(
                 darkTheme = false,
-                content = { LoginScreen() }
+                content = { CreateAccountScreen() }
             )
         }
     }
