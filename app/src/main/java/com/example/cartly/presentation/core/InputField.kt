@@ -1,11 +1,18 @@
 package com.example.cartly.presentation.core
 
+import android.R.attr.enabled
+import android.R.attr.label
+import android.R.attr.singleLine
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
@@ -22,12 +29,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +47,7 @@ fun InputField(
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
+    errorText: String,
     modifier: Modifier = Modifier,
     leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
@@ -48,11 +56,13 @@ fun InputField(
     trailingIconContentDescription: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    imeAction: ImeAction,
     singleLine: Boolean = true,
     enabled: Boolean = true,
     isError: Boolean = false,
-    containerColor: Color = MaterialTheme.colorScheme.surface
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    onNext: ((KeyboardActionScope) -> Unit)? = null,
+    onDone: ((KeyboardActionScope) -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
         Text(
@@ -65,7 +75,14 @@ fun InputField(
         TextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = if (!isError) Modifier.fillMaxWidth() else
+                Modifier
+                    .fillMaxWidth()
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.error,
+                        shape = MaterialTheme.shapes.small
+                    ),
             placeholder = {
                 Text(
                     text = placeholder,
@@ -102,8 +119,13 @@ fun InputField(
                 }
             },
             visualTransformation = visualTransformation,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
+            keyboardOptions = keyboardOptions.copy(
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = onNext,
+                onDone = onDone,
+            ),
             singleLine = singleLine,
             enabled = enabled,
             isError = isError,
@@ -118,6 +140,13 @@ fun InputField(
                 errorIndicatorColor = Color.Transparent
             )
         )
+        if (isError) {
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = errorText,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 
@@ -137,7 +166,12 @@ private fun InputFieldPreview() {
                 label = "Imię i nazwisko",
                 placeholder = "Jan Kowalski",
                 leadingIcon = Icons.Outlined.Person,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                isError = true,
+                errorText = "Imię i nazwisko musi zawierać co najmniej 2 znaki",
+                onDone = {},
+                onNext = {},
+                imeAction = ImeAction.Next
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +182,11 @@ private fun InputFieldPreview() {
                 label = "Adres e-mail",
                 placeholder = "jan@twojadomena.pl",
                 leadingIcon = Icons.Outlined.Email,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                errorText = "Niepoprawny adres e-mail",
+                onNext = {},
+                onDone = {},
+                imeAction = ImeAction.Next
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +200,11 @@ private fun InputFieldPreview() {
                 trailingIcon = if (isPasswordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                 onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },
                 visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                errorText = "Hasło musi zawierać co najmniej 8 znaków",
+                onNext = {},
+                onDone = {},
+                imeAction = ImeAction.Done
             )
         }
     }

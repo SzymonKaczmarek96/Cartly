@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -52,6 +53,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,11 +61,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -103,6 +110,9 @@ private fun CreateAccountContentScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+
 
     Column(
         modifier = modifier
@@ -143,7 +153,7 @@ private fun CreateAccountContentScreen(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         LabeledDivider(
             text = "LUB WYPEŁNIJ FORMULARZ",
@@ -151,18 +161,22 @@ private fun CreateAccountContentScreen(
             thickness = 1.dp
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         InputField(
+            modifier = Modifier,
             value = name,
             onValueChange = { name = it },
             label = "Imię i nazwisko",
             placeholder = "Jan Kowalski",
             leadingIcon = Icons.Outlined.Person,
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface,
+            errorText = "Imie i nazwisko jest wymagane",
+            onNext = {focusManager.moveFocus(FocusDirection.Down)},
+            imeAction = ImeAction.Next
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         InputField(
             value = email,
@@ -170,10 +184,13 @@ private fun CreateAccountContentScreen(
             label = "Adres e-mail",
             placeholder = "jan@twojadomena.pl",
             leadingIcon = Icons.Outlined.Email,
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface,
+            errorText = "Adres email jest wymagany",
+            onNext = {focusManager.moveFocus(FocusDirection.Down)},
+            imeAction = ImeAction.Next
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         InputField(
             value = password,
@@ -184,7 +201,10 @@ private fun CreateAccountContentScreen(
             trailingIcon = if (isPasswordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
             onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },
             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface,
+            errorText = "Hasło jest wymagane",
+            onDone = {focusManager.clearFocus()},
+            imeAction = ImeAction.Done
         )
 
 
