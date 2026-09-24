@@ -112,8 +112,6 @@ private fun CreateAccountContentScreen(
     var isPasswordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -207,6 +205,10 @@ private fun CreateAccountContentScreen(
             imeAction = ImeAction.Done
         )
 
+        //TODO Strength password
+        //TODO Repeat password
+        // TODO Accept regulations
+        // TODO Do you have account? login ->
 
     }
 }
