@@ -38,6 +38,7 @@ val ErrorContainerLight = Color(0xFFFFDAD6)
 val OnErrorContainerLight = Color(0xFF410002)
 
 
+
 // ---------------------------------------------------------
 // DARK COLORS
 // ---------------------------------------------------------
@@ -74,7 +75,6 @@ val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-
 // ---------------------------------------------------------
 // EXTRA SURFACES
 // ---------------------------------------------------------
@@ -90,3 +90,9 @@ val SurfaceContainerLowLight = Color(0xFFF1F4F0)
 val SurfaceContainerLight = Color(0xFFEBEFEB)
 val SurfaceContainerHighLight = Color(0xFFE5E9E4)
 val SurfaceContainerHighestLight = Color(0xFFDDE2DD)
+
+val WarningLight = Color(0xFFE9D502)
+
+val GoodLight = Color(0xFF7CB342)
+
+val ExcellentLight = Color(0xFF2E7D32)

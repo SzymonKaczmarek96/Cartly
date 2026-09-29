@@ -1,8 +1,5 @@
 package com.example.cartly.presentation.core
 
-import android.R.attr.enabled
-import android.R.attr.label
-import android.R.attr.singleLine
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
@@ -50,8 +46,8 @@ fun InputField(
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
-    errorText: String,
     modifier: Modifier = Modifier,
+    errorText: String = "",
     leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
     onTrailingIconClick: (() -> Unit)? = null,
@@ -59,7 +55,7 @@ fun InputField(
     trailingIconContentDescription: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    imeAction: ImeAction,
+    imeAction: ImeAction = ImeAction.Default,
     singleLine: Boolean = true,
     enabled: Boolean = true,
     isError: Boolean = false,
@@ -143,13 +139,15 @@ fun InputField(
                 errorIndicatorColor = Color.Transparent
             )
         )
-        if (isError) {
+        if (isError && errorText.isNotEmpty()) {
             Text(
-                modifier = Modifier.padding(8.dp)
-                    .semantics{
+                modifier = Modifier
+                    .padding(top = 4.dp, start = 8.dp)
+                    .semantics {
                         liveRegion = LiveRegionMode.Assertive
                     },
                 text = errorText,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
         }
@@ -164,7 +162,7 @@ private fun InputFieldPreview() {
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    AppTheme() {
+    AppTheme {
         Column(modifier = Modifier.fillMaxWidth()) {
             InputField(
                 value = name,

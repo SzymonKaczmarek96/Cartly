@@ -1,7 +1,5 @@
 package com.example.cartly.presentation.createaccount
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,4 +14,12 @@ internal class CreateAccountViewModel(
     val state: StateFlow<CreateAccountState> = _state.asStateFlow()
 
     //TODO
+}
+
+sealed class StrengthPassword(){
+    data object EmptyPassword: StrengthPassword()
+    data object WeakPassword: StrengthPassword()
+    data object MediumPassword: StrengthPassword()
+    data object StrongPassword: StrengthPassword()
+    data object VeryStrongPassword: StrengthPassword()
 }

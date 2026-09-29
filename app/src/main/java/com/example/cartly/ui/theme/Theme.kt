@@ -40,7 +40,7 @@ private val LightColorScheme = lightColorScheme(
     error = ErrorLight,
     onError = OnErrorLight,
     errorContainer = ErrorContainerLight,
-    onErrorContainer = OnErrorContainerLight
+    onErrorContainer = OnErrorContainerLight,
 )
 
 private val DarkColorScheme = darkColorScheme(
