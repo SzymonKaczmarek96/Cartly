@@ -5,6 +5,8 @@ internal data class CreateAccountState(
     val name: String = "",
     val email: String = "",
     val password: String ="",
+    val passwordMatch: Boolean = false,
+    val passwordStrength: StrengthPassword = StrengthPassword.EmptyPassword
 )
 
 

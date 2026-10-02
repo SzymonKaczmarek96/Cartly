@@ -57,11 +57,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.theme.SurfaceContainerHighestDark
 import com.example.cartly.R
 import com.example.cartly.presentation.core.InputField
 import com.example.cartly.presentation.core.LabeledDivider
 import com.example.cartly.presentation.core.StrengthPasswordLabel
 
+//TODO Clickable button should has different color if is disable
+// Check all possibilities
+// Google registration
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreateAccountScreen() {
@@ -91,6 +95,7 @@ private fun CreateAccountContentScreen(
 
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
+    var enableButton by remember {mutableStateOf(false)}
 
     val focusManager = LocalFocusManager.current
 
@@ -234,12 +239,12 @@ private fun CreateAccountContentScreen(
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(
-                    MaterialTheme.colorScheme.primary,
+                    if(enableButton)MaterialTheme.colorScheme.primary else SurfaceContainerHighestDark,
                     MaterialTheme.shapes.large
                 )
                 .clickable(
                     onClick = {},
-                    enabled = true
+                    enabled = enableButton
                 ),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -272,6 +277,12 @@ private fun CreateAccountContentScreen(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    onClick = {
+
+                    }
+                ),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
                 text = "Zaloguj się"
