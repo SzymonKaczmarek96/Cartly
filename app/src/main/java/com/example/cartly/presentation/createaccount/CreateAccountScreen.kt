@@ -2,6 +2,7 @@
 
 package com.example.cartly.presentation.createaccount
 
+import android.R.attr.label
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.theme.SurfaceContainerHighestDark
 import com.example.cartly.R
@@ -63,20 +67,26 @@ import com.example.cartly.presentation.core.InputField
 import com.example.cartly.presentation.core.LabeledDivider
 import com.example.cartly.presentation.core.StrengthPasswordLabel
 
-//TODO Clickable button should has different color if is disable
 // Check all possibilities
 // Google registration
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CreateAccountScreen() {
+internal fun CreateAccountScreen (
+    viewModel: CreateAccountViewModel = hiltViewModel()
+) {
+
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             CreateAccountTopBar(modifier = Modifier)
         },
         content = { paddingValues ->
             CreateAccountContentScreen(
+                uiState = uiState,
                 modifier = Modifier.padding(horizontal = 4.dp),
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                onPersonalDataChange = {viewModel.changeFirstNameAndLastName(it)}
             )
         },
         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -85,10 +95,11 @@ fun CreateAccountScreen() {
 
 @Composable
 private fun CreateAccountContentScreen(
+    onPersonalDataChange: (String) -> Unit,
+    uiState: CreateAccountState,
     modifier: Modifier,
     paddingValues: PaddingValues
 ) {
-    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -149,8 +160,10 @@ private fun CreateAccountContentScreen(
         Spacer(Modifier.height(24.dp))
 
         InputField(
-            value = name,
-            onValueChange = { name = it },
+            value = uiState.personalData.rawInput,
+            onValueChange = { value ->
+                onPersonalDataChange(value)
+                            },
             label = "Imię i nazwisko",
             placeholder = "Jan Kowalski",
             leadingIcon = Icons.Outlined.Person,
@@ -376,7 +389,12 @@ private fun CreateAccountTopBar(
 private fun CreateAccountScreenPreview() {
     AppTheme(
         content = {
-            CreateAccountScreen()
+            CreateAccountScreen(
+                viewModel = CreateAccountViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    createAccountPasswordValidation = CreateAccountPasswordValidation()
+                )
+            )
         }
     )
 }

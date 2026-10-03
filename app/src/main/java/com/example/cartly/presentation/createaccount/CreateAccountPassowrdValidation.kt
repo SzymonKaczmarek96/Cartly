@@ -1,8 +1,9 @@
 package com.example.cartly.presentation.createaccount
 
-import android.R.attr.password
+import javax.inject.Inject
 
-object CreateAccountPasswordValidation {
+
+internal class CreateAccountPasswordValidation @Inject constructor(){
     fun validatePassword(password: String): StrengthPassword {
        return when {
             password.length <= 9 ->  StrengthPassword.WeakPassword
