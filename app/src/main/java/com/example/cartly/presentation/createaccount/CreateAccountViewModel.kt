@@ -1,12 +1,15 @@
 package com.example.cartly.presentation.createaccount
 
+import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
 //savedStateHandle
@@ -17,10 +20,12 @@ internal class CreateAccountViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val createAccountPasswordValidation: CreateAccountPasswordValidation
 ) : ViewModel() {
-    private val _state = MutableStateFlow(
-        savedStateHandle.get<CreateAccountState>("initial_state") ?: CreateAccountState()
+    private val stateKey = "account_state"
+
+    val state = savedStateHandle.getStateFlow(
+        key = stateKey,
+        initialValue = CreateAccountState()
     )
-    val state: StateFlow<CreateAccountState> = _state.asStateFlow()
 
     fun changeFirstNameAndLastName(personalData: String) {
         val trimmed = personalData.trim()
@@ -29,7 +34,7 @@ internal class CreateAccountViewModel @Inject constructor(
         val firstName = parts.getOrNull(0)?.lowercase() ?: ""
         val lastName = parts.getOrNull(1)?.lowercase() ?: ""
 
-        _state.update { currentState ->
+        updateState { currentState ->
             currentState.copy(
                 personalData = PersonalData(
                     rawInput = personalData,
@@ -44,7 +49,7 @@ internal class CreateAccountViewModel @Inject constructor(
         val passwordRegex = Regex("^[a-zA-Z0-9!@#$%^&*()-+]{8,}$")
         if (passwordRegex.matches(password.trim())) {
             val passwordStrength = createAccountPasswordValidation.validatePassword(password)
-            _state.update { currentState ->
+            updateState { currentState ->
                 currentState.copy(
                     passwordStrength = passwordStrength,
                     password = password
@@ -58,45 +63,48 @@ internal class CreateAccountViewModel @Inject constructor(
             "^[A-Za-z0-9+._%\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$"
         )
         if (emailRegex.matches(email.trim())) {
-            _state.update { currentState ->
+            updateState { currentState ->
                 currentState.copy(email = email)
             }
         }
     }
 
     fun validateRepeatPassword(repeatPassword: String) {
-        if (repeatPassword == _state.value.password) {
-            _state.update { currentState ->
+        if (repeatPassword == state.value.password) {
+            updateState { currentState ->
                 currentState.copy(passwordMatch = true)
             }
         }
     }
 
     fun sumUpValidation(): Boolean {
-        val state = _state.value
-        return state.passwordStrength != StrengthPassword.EmptyPassword
-                && state.passwordMatch
-                && state.email.isNotEmpty()
+        return state.value.passwordStrength != StrengthPassword.EmptyPassword
+                && state.value.passwordMatch
+                && state.value.email.isNotEmpty()
     }
 
     private fun isLoading() {
-        _state.update {
+        updateState {
             it.copy(submissionStatus = SubmissionStatus.Loading)
         }
     }
 
+    private fun updateState(transform: (CreateAccountState) -> CreateAccountState) {
+        val currentState = state.value
+        savedStateHandle[stateKey] = transform(currentState)
+    }
 }
 
-@kotlinx.parcelize.Parcelize
-sealed class StrengthPassword : android.os.Parcelable {
-    @kotlinx.parcelize.Parcelize
+@Parcelize
+sealed class StrengthPassword : Parcelable {
+    @Parcelize
     data object EmptyPassword : StrengthPassword()
-    @kotlinx.parcelize.Parcelize
+    @Parcelize
     data object WeakPassword : StrengthPassword()
-    @kotlinx.parcelize.Parcelize
+    @Parcelize
     data object MediumPassword : StrengthPassword()
-    @kotlinx.parcelize.Parcelize
+    @Parcelize
     data object StrongPassword : StrengthPassword()
-    @kotlinx.parcelize.Parcelize
+    @Parcelize
     data object VeryStrongPassword : StrengthPassword()
 }
