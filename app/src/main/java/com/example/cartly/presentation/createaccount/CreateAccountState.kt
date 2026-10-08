@@ -7,8 +7,10 @@ import kotlinx.parcelize.Parcelize
 internal data class CreateAccountState(
     val submissionStatus: SubmissionStatus = SubmissionStatus.Idle,
     val personalData: PersonalData = PersonalData(),
-    val email: String = "",
-    val password: String ="",
+    val emailData: EmailData = EmailData(),
+    val emailError: String = "" ,
+    val password: String ="" ,
+    val passwordError: String ="" ,
     val passwordMatch: Boolean = false,
     val passwordStrength: StrengthPassword = StrengthPassword.EmptyPassword
 ) : Parcelable
@@ -18,6 +20,16 @@ internal data class PersonalData(
     val rawInput: String = "",
     val firstName: String = "",
     val lastName: String = "",
+    val emailError: String = "",
+    val isValid: Boolean = false
+) : Parcelable
+
+@Parcelize
+internal data class EmailData(
+    val rawInput: String = "",
+    val email: String = "",
+    val isValid: Boolean = false,
+    val emailError: String = ""
 ) : Parcelable
 
 internal sealed interface SubmissionStatus : Parcelable {

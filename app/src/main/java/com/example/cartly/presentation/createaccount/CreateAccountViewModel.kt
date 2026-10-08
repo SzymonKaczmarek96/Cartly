@@ -3,12 +3,7 @@ package com.example.cartly.presentation.createaccount
 import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -58,13 +53,17 @@ internal class CreateAccountViewModel @Inject constructor(
         }
     }
 
-    fun emailValidator(email: String) {
+    fun validateEmail(email: String) {
         val emailRegex = Regex(
             "^[A-Za-z0-9+._%\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$"
         )
         if (emailRegex.matches(email.trim())) {
             updateState { currentState ->
-                currentState.copy(email = email)
+                currentState.copy(emailData = EmailData(rawInput = email, isValid = true, email = email))
+            }
+        } else {
+            updateState { currentState ->
+                currentState.copy(emailData = EmailData(rawInput = email, isValid = false))
             }
         }
     }
@@ -80,7 +79,7 @@ internal class CreateAccountViewModel @Inject constructor(
     fun sumUpValidation(): Boolean {
         return state.value.passwordStrength != StrengthPassword.EmptyPassword
                 && state.value.passwordMatch
-                && state.value.email.isNotEmpty()
+                && state.value.emailData.isValid
     }
 
     private fun isLoading() {

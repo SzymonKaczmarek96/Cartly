@@ -2,7 +2,6 @@
 
 package com.example.cartly.presentation.createaccount
 
-import android.R.attr.label
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +70,7 @@ import com.example.cartly.presentation.core.StrengthPasswordLabel
 // Google registration
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun CreateAccountScreen (
+internal fun CreateAccountScreen(
     viewModel: CreateAccountViewModel = hiltViewModel()
 ) {
 
@@ -86,7 +85,8 @@ internal fun CreateAccountScreen (
                 uiState = uiState,
                 modifier = Modifier.padding(horizontal = 4.dp),
                 paddingValues = paddingValues,
-                onPersonalDataChange = {viewModel.changeFirstNameAndLastName(it)}
+                onPersonalDataChange = { viewModel.changeFirstNameAndLastName(it) },
+                onEmailChange = { viewModel.validateEmail(it) }
             )
         },
         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -96,17 +96,16 @@ internal fun CreateAccountScreen (
 @Composable
 private fun CreateAccountContentScreen(
     onPersonalDataChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
     uiState: CreateAccountState,
     modifier: Modifier,
     paddingValues: PaddingValues
 ) {
-    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
-    var enableButton by remember {mutableStateOf(false)}
+    var enableButton by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
@@ -163,7 +162,7 @@ private fun CreateAccountContentScreen(
             value = uiState.personalData.rawInput,
             onValueChange = { value ->
                 onPersonalDataChange(value)
-                            },
+            },
             label = "Imię i nazwisko",
             placeholder = "Jan Kowalski",
             leadingIcon = Icons.Outlined.Person,
@@ -176,8 +175,10 @@ private fun CreateAccountContentScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         InputField(
-            value = email,
-            onValueChange = { email = it },
+            value = uiState.emailData.rawInput,
+            onValueChange = {
+                onEmailChange(it)
+            },
             label = "Adres e-mail",
             placeholder = "jan@twojadomena.pl",
             leadingIcon = Icons.Outlined.Email,
@@ -252,7 +253,7 @@ private fun CreateAccountContentScreen(
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(
-                    if(enableButton)MaterialTheme.colorScheme.primary else SurfaceContainerHighestDark,
+                    if (enableButton) MaterialTheme.colorScheme.primary else SurfaceContainerHighestDark,
                     MaterialTheme.shapes.large
                 )
                 .clickable(
