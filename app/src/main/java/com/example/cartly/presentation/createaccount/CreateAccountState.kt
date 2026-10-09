@@ -8,9 +8,9 @@ internal data class CreateAccountState(
     val submissionStatus: SubmissionStatus = SubmissionStatus.Idle,
     val personalData: PersonalData = PersonalData(),
     val emailData: EmailData = EmailData(),
-    val emailError: String = "" ,
-    val password: String ="" ,
-    val passwordError: String ="" ,
+    val emailError: String = "",
+    val password: String = "",
+    val passwordError: String = "",
     val passwordMatch: Boolean = false,
     val passwordStrength: StrengthPassword = StrengthPassword.EmptyPassword
 ) : Parcelable
@@ -21,14 +21,14 @@ internal data class PersonalData(
     val firstName: String = "",
     val lastName: String = "",
     val emailError: String = "",
-    val isValid: Boolean = false
+    val isError: Boolean = false,
 ) : Parcelable
 
 @Parcelize
 internal data class EmailData(
     val rawInput: String = "",
     val email: String = "",
-    val isValid: Boolean = false,
+    val isError: Boolean = false,
     val emailError: String = ""
 ) : Parcelable
 

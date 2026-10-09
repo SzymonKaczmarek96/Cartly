@@ -7,9 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
-//savedStateHandle
-// death process
-
 @HiltViewModel
 internal class CreateAccountViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
@@ -21,6 +18,30 @@ internal class CreateAccountViewModel @Inject constructor(
         key = stateKey,
         initialValue = CreateAccountState()
     )
+
+    fun validateEmptyFields() {
+        if (state.value.personalData.rawInput.isEmpty()) {
+            updateState { currentState ->
+                val personalData = currentState.personalData
+                currentState.copy(
+                    personalData = personalData.copy(
+                        isError = true,
+                        emailError = "Imię i nazwisko jest wymagane"
+                    )
+                )
+            }
+        } else {
+            updateState { currentState ->
+                val personalData = currentState.personalData
+                currentState.copy(
+                    personalData = personalData.copy(
+                        isError = false,
+                        emailError = "",
+                    )
+                )
+            }
+        }
+    }
 
     fun changeFirstNameAndLastName(personalData: String) {
         val trimmed = personalData.trim()
@@ -59,11 +80,17 @@ internal class CreateAccountViewModel @Inject constructor(
         )
         if (emailRegex.matches(email.trim())) {
             updateState { currentState ->
-                currentState.copy(emailData = EmailData(rawInput = email, isValid = true, email = email))
+                currentState.copy(
+                    emailData = EmailData(
+                        rawInput = email,
+                        isError = false,
+                        email = email
+                    )
+                )
             }
         } else {
             updateState { currentState ->
-                currentState.copy(emailData = EmailData(rawInput = email, isValid = false))
+                currentState.copy(emailData = EmailData(rawInput = email, isError = true))
             }
         }
     }
@@ -79,7 +106,7 @@ internal class CreateAccountViewModel @Inject constructor(
     fun sumUpValidation(): Boolean {
         return state.value.passwordStrength != StrengthPassword.EmptyPassword
                 && state.value.passwordMatch
-                && state.value.emailData.isValid
+                && !state.value.emailData.isError
     }
 
     private fun isLoading() {
@@ -87,6 +114,18 @@ internal class CreateAccountViewModel @Inject constructor(
             it.copy(submissionStatus = SubmissionStatus.Loading)
         }
     }
+
+//    private fun personalDataValidation(rawInput: String) {
+//        if (rawInput.isEmpty()) {
+//            updateState { currentState ->
+//                currentState.copy(
+//                    personalData = PersonalData(
+//                        isValid = false
+//                    )
+//                )
+//            }
+//        }
+//    }
 
     private fun updateState(transform: (CreateAccountState) -> CreateAccountState) {
         val currentState = state.value
@@ -98,12 +137,16 @@ internal class CreateAccountViewModel @Inject constructor(
 sealed class StrengthPassword : Parcelable {
     @Parcelize
     data object EmptyPassword : StrengthPassword()
+
     @Parcelize
     data object WeakPassword : StrengthPassword()
+
     @Parcelize
     data object MediumPassword : StrengthPassword()
+
     @Parcelize
     data object StrongPassword : StrengthPassword()
+
     @Parcelize
     data object VeryStrongPassword : StrengthPassword()
 }

@@ -2,8 +2,12 @@
 
 package com.example.cartly.presentation.createaccount
 
+import android.R.attr.label
+import android.R.attr.x
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -38,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +51,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -76,6 +85,8 @@ internal fun CreateAccountScreen(
 
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
+
+
     Scaffold(
         topBar = {
             CreateAccountTopBar(modifier = Modifier)
@@ -85,6 +96,7 @@ internal fun CreateAccountScreen(
                 uiState = uiState,
                 modifier = Modifier.padding(horizontal = 4.dp),
                 paddingValues = paddingValues,
+                onFocusChange = { viewModel.validateEmptyFields() },
                 onPersonalDataChange = { viewModel.changeFirstNameAndLastName(it) },
                 onEmailChange = { viewModel.validateEmail(it) }
             )
@@ -95,6 +107,7 @@ internal fun CreateAccountScreen(
 
 @Composable
 private fun CreateAccountContentScreen(
+    onFocusChange: () -> Unit,
     onPersonalDataChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     uiState: CreateAccountState,
@@ -108,6 +121,13 @@ private fun CreateAccountContentScreen(
     var enableButton by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    val hasBeenFocused = remember { mutableStateOf(false) }
+
+    LaunchedEffect(focusRequester) {
+        focusRequester.requestFocus()
+        hasBeenFocused.value = true
+    }
 
     Column(
         modifier = modifier
@@ -159,6 +179,13 @@ private fun CreateAccountContentScreen(
         Spacer(Modifier.height(24.dp))
 
         InputField(
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .onFocusChanged{ focusState ->
+                    if (!focusState.isFocused && hasBeenFocused.value){
+                        onFocusChange()
+                    }
+                },
             value = uiState.personalData.rawInput,
             onValueChange = { value ->
                 onPersonalDataChange(value)
@@ -168,6 +195,7 @@ private fun CreateAccountContentScreen(
             leadingIcon = Icons.Outlined.Person,
             containerColor = MaterialTheme.colorScheme.surface,
             errorText = "Imię i nazwisko jest wymagane",
+            isError = uiState.personalData.isError,
             onNext = { focusManager.moveFocus(FocusDirection.Down) },
             imeAction = ImeAction.Next
         )
@@ -175,6 +203,11 @@ private fun CreateAccountContentScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         InputField(
+            modifier = Modifier
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) {
+                    }
+                },
             value = uiState.emailData.rawInput,
             onValueChange = {
                 onEmailChange(it)
@@ -184,6 +217,7 @@ private fun CreateAccountContentScreen(
             leadingIcon = Icons.Outlined.Email,
             containerColor = MaterialTheme.colorScheme.surface,
             errorText = "Adres email jest wymagany",
+            isError = uiState.emailData.isError,
             onNext = { focusManager.moveFocus(FocusDirection.Down) },
             imeAction = ImeAction.Next
         )
@@ -191,6 +225,11 @@ private fun CreateAccountContentScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         InputField(
+            modifier = Modifier
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) {
+                    }
+                },
             value = password,
             onValueChange = { password = it },
             label = "Hasło",
