@@ -21,25 +21,15 @@ internal class CreateAccountViewModel @Inject constructor(
 
     fun validateEmptyFields() {
         if (state.value.personalData.rawInput.isEmpty()) {
-            updateState { currentState ->
-                val personalData = currentState.personalData
-                currentState.copy(
-                    personalData = personalData.copy(
-                        isError = true,
-                        emailError = "Imię i nazwisko jest wymagane"
-                    )
-                )
-            }
+            updatePersonalDataState(isError = true, errorMessage = "Imię i nazwisko jest wymagane")
         } else {
-            updateState { currentState ->
-                val personalData = currentState.personalData
-                currentState.copy(
-                    personalData = personalData.copy(
-                        isError = false,
-                        emailError = "",
-                    )
-                )
-            }
+            updatePersonalDataState(isError = false)
+        }
+    }
+
+    fun validateEmptyEmailField() {
+        if (state.value.emailData.rawInput.isEmpty()) {
+            updateEmailState(isError = true, errorMessage = "Adres e-mail jest wymagany")
         }
     }
 
@@ -52,7 +42,7 @@ internal class CreateAccountViewModel @Inject constructor(
 
         updateState { currentState ->
             currentState.copy(
-                personalData = PersonalData(
+                personalData = currentState.personalData.copy(
                     rawInput = personalData,
                     firstName = firstName,
                     lastName = lastName
@@ -62,14 +52,20 @@ internal class CreateAccountViewModel @Inject constructor(
     }
 
     fun validatePassword(password: String) {
-        val passwordRegex = Regex("^[a-zA-Z0-9!@#$%^&*()-+]{8,}$")
-        if (passwordRegex.matches(password.trim())) {
-            val passwordStrength = createAccountPasswordValidation.validatePassword(password)
-            updateState { currentState ->
-                currentState.copy(
-                    passwordStrength = passwordStrength,
-                    password = password
-                )
+        val passwordRegex = Regex(
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]).{8,}$"
+        )
+        when {
+            password.length < 8 -> {
+                updatePasswordStateWithError("Hasło jest za krótkie", password)
+            }
+
+            !passwordRegex.matches(password.trim()) -> {
+                updatePasswordStateWithError("Hasło nie spełnia wymagań", password)
+            }
+
+            else -> {
+                updatePasswordStateWithSuccess(password)
             }
         }
     }
@@ -79,34 +75,129 @@ internal class CreateAccountViewModel @Inject constructor(
             "^[A-Za-z0-9+._%\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$"
         )
         if (emailRegex.matches(email.trim())) {
-            updateState { currentState ->
-                currentState.copy(
-                    emailData = EmailData(
-                        rawInput = email,
-                        isError = false,
-                        email = email
-                    )
-                )
-            }
+            updateEmailState(rawInput = email, email = email, isError = false)
         } else {
-            updateState { currentState ->
-                currentState.copy(emailData = EmailData(rawInput = email, isError = true))
-            }
+            updateEmailState(
+                rawInput = email,
+                isError = true,
+                errorMessage = "Adres e-mail jest nieprawidłowy"
+            )
         }
     }
 
     fun validateRepeatPassword(repeatPassword: String) {
-        if (repeatPassword == state.value.password) {
-            updateState { currentState ->
-                currentState.copy(passwordMatch = true)
-            }
+        if (repeatPassword == state.value.passwordData.password && repeatPassword.isNotEmpty()) {
+            updateRepeatPasswordState(
+                repeatPassword = repeatPassword,
+                passwordMatch = true,
+                isError = false
+            )
+        } else {
+            val errorMessage =
+                if (repeatPassword.isEmpty()) "To pole nie może być puste" else "Hasła nie są identyczne"
+            updateRepeatPasswordState(
+                repeatPassword = repeatPassword,
+                passwordMatch = false,
+                isError = true,
+                errorMessage = errorMessage
+            )
         }
     }
 
-    fun sumUpValidation(): Boolean {
-        return state.value.passwordStrength != StrengthPassword.EmptyPassword
-                && state.value.passwordMatch
-                && !state.value.emailData.isError
+    fun checkIsFromValid(currentState: CreateAccountState): Boolean {
+        return currentState.passwordData.passwordStrength != StrengthPassword.EmptyPassword
+                && currentState.repeatPasswordData.passwordMatch
+                && !currentState.emailData.isError
+                && currentState.emailData.email.isNotEmpty()
+                && currentState.personalData.rawInput.isNotEmpty()
+                && currentState.personalData.rawInput.isNotBlank()
+                && currentState.personalData.rawInput.length > 3
+                && !currentState.passwordData.isError
+
+    }
+
+    private fun updatePersonalDataState(
+        isError: Boolean,
+        errorMessage: String = ""
+    ) {
+        updateState { currentState ->
+            currentState.copy(
+                personalData = currentState.personalData.copy(
+                    isError = isError,
+                    personalDataError = errorMessage
+                )
+            )
+        }
+    }
+
+    private fun updateEmailState(
+        rawInput: String? = null,
+        email: String? = null,
+        isError: Boolean,
+        errorMessage: String = ""
+    ) {
+        updateState { currentState ->
+            val currentEmailData = currentState.emailData
+            currentState.copy(
+                emailData = currentEmailData.copy(
+                    rawInput = rawInput ?: currentEmailData.rawInput,
+                    email = email ?: currentEmailData.email,
+                    isError = isError,
+                    emailError = errorMessage
+                )
+            )
+        }
+    }
+
+    private fun updateRepeatPasswordState(
+        repeatPassword: String,
+        passwordMatch: Boolean,
+        isError: Boolean,
+        errorMessage: String = ""
+    ) {
+        updateState { currentState ->
+            currentState.copy(
+                repeatPasswordData = RepeatPasswordData(
+                    repeatedPassword = repeatPassword,
+                    passwordMatch = passwordMatch,
+                    isError = isError,
+                    repeatedPasswordError = errorMessage
+                )
+            )
+        }
+    }
+
+    private fun updatePasswordStateWithError(
+        errorMessage: String,
+        password: String
+    ) {
+        val passwordData = state.value.passwordData
+        updateState { currentState ->
+            currentState.copy(
+                passwordData = passwordData.copy(
+                    rawInput = password,
+                    password = password,
+                    isError = true,
+                    passwordError = errorMessage
+                )
+            )
+        }
+    }
+
+    private fun updatePasswordStateWithSuccess(password: String) {
+        val passwordStrength = createAccountPasswordValidation.validatePassword(password)
+        val passwordData = state.value.passwordData
+        updateState { currentState ->
+            currentState.copy(
+                passwordData = passwordData.copy(
+                    rawInput = password,
+                    isError = false,
+                    passwordError = "",
+                    password = password,
+                    passwordStrength = passwordStrength
+                )
+            )
+        }
     }
 
     private fun isLoading() {
@@ -115,21 +206,13 @@ internal class CreateAccountViewModel @Inject constructor(
         }
     }
 
-//    private fun personalDataValidation(rawInput: String) {
-//        if (rawInput.isEmpty()) {
-//            updateState { currentState ->
-//                currentState.copy(
-//                    personalData = PersonalData(
-//                        isValid = false
-//                    )
-//                )
-//            }
-//        }
-//    }
-
     private fun updateState(transform: (CreateAccountState) -> CreateAccountState) {
         val currentState = state.value
-        savedStateHandle[stateKey] = transform(currentState)
+        val newState = transform(currentState)
+        val finalState = newState.copy(
+            isFormValid = checkIsFromValid(newState)
+        )
+        savedStateHandle[stateKey] = finalState
     }
 }
 

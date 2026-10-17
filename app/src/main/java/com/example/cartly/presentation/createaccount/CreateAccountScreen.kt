@@ -3,11 +3,8 @@
 package com.example.cartly.presentation.createaccount
 
 import android.R.attr.label
-import android.R.attr.x
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -17,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -75,17 +72,12 @@ import com.example.cartly.presentation.core.InputField
 import com.example.cartly.presentation.core.LabeledDivider
 import com.example.cartly.presentation.core.StrengthPasswordLabel
 
-// Check all possibilities
-// Google registration
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun CreateAccountScreen(
     viewModel: CreateAccountViewModel = hiltViewModel()
 ) {
-
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-
-
 
     Scaffold(
         topBar = {
@@ -96,9 +88,12 @@ internal fun CreateAccountScreen(
                 uiState = uiState,
                 modifier = Modifier.padding(horizontal = 4.dp),
                 paddingValues = paddingValues,
-                onFocusChange = { viewModel.validateEmptyFields() },
+                onPersonalDataInputField = { viewModel.validateEmptyFields() },
                 onPersonalDataChange = { viewModel.changeFirstNameAndLastName(it) },
-                onEmailChange = { viewModel.validateEmail(it) }
+                onEmailChange = { viewModel.validateEmail(it) },
+                onEmailInputCheck = { viewModel.validateEmptyEmailField() },
+                onPasswordRepeatableCheck = { viewModel.validateRepeatPassword(it) },
+                onPasswordCheck = { viewModel.validatePassword(it) },
             )
         },
         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -107,22 +102,25 @@ internal fun CreateAccountScreen(
 
 @Composable
 private fun CreateAccountContentScreen(
-    onFocusChange: () -> Unit,
+    onPasswordRepeatableCheck: (String) -> Unit,
+    onPasswordCheck: (String) -> Unit,
+    onEmailInputCheck: () -> Unit,
+    onPersonalDataInputField: () -> Unit,
     onPersonalDataChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     uiState: CreateAccountState,
     modifier: Modifier,
     paddingValues: PaddingValues
 ) {
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
-    var enableButton by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val hasBeenFocused = remember { mutableStateOf(false) }
+    val emailInputTouched = remember { mutableStateOf(false) }
+    val passwordInputTouched = remember { mutableStateOf(false) }
+    val repeatPasswordInputTouched = remember { mutableStateOf(false) }
 
     LaunchedEffect(focusRequester) {
         focusRequester.requestFocus()
@@ -131,6 +129,7 @@ private fun CreateAccountContentScreen(
 
     Column(
         modifier = modifier
+            .imePadding()
             .fillMaxSize()
             .padding(paddingValues)
             .padding(horizontal = 16.dp)
@@ -183,7 +182,7 @@ private fun CreateAccountContentScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged{ focusState ->
                     if (!focusState.isFocused && hasBeenFocused.value){
-                        onFocusChange()
+                        onPersonalDataInputField()
                     }
                 },
             value = uiState.personalData.rawInput,
@@ -205,18 +204,24 @@ private fun CreateAccountContentScreen(
         InputField(
             modifier = Modifier
                 .onFocusChanged { focusState ->
-                    if (focusState.isFocused) {
+                    if (focusState.hasFocus ) {
+                        emailInputTouched.value = true
+                    }
+                    if(emailInputTouched.value && !focusState.hasFocus) {
+                        onEmailInputCheck()
                     }
                 },
             value = uiState.emailData.rawInput,
             onValueChange = {
-                onEmailChange(it)
+                if(emailInputTouched.value) {
+                    onEmailChange(it)
+                }
             },
             label = "Adres e-mail",
             placeholder = "jan@twojadomena.pl",
             leadingIcon = Icons.Outlined.Email,
             containerColor = MaterialTheme.colorScheme.surface,
-            errorText = "Adres email jest wymagany",
+            errorText = uiState.emailData.emailError,
             isError = uiState.emailData.isError,
             onNext = { focusManager.moveFocus(FocusDirection.Down) },
             imeAction = ImeAction.Next
@@ -227,11 +232,16 @@ private fun CreateAccountContentScreen(
         InputField(
             modifier = Modifier
                 .onFocusChanged { focusState ->
-                    if (focusState.isFocused) {
+                    if (focusState.hasFocus) {
+                        passwordInputTouched.value = true
+                    }
+                    if(passwordInputTouched.value && !focusState.hasFocus) {
+                        onPasswordCheck(uiState.passwordData.rawInput)
                     }
                 },
-            value = password,
-            onValueChange = { password = it },
+            value = uiState.passwordData.rawInput,
+            onValueChange = {
+                onPasswordCheck(it) },
             label = "Hasło",
             placeholder = "Minimum 8 znaków",
             leadingIcon = Icons.Outlined.Lock,
@@ -239,7 +249,8 @@ private fun CreateAccountContentScreen(
             onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },
             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             containerColor = MaterialTheme.colorScheme.surface,
-            errorText = "Hasło jest wymagane",
+            errorText = uiState.passwordData.passwordError,
+            isError = uiState.passwordData.isError,
             onNext = { focusManager.moveFocus(FocusDirection.Down) },
             imeAction = ImeAction.Next
         )
@@ -259,7 +270,7 @@ private fun CreateAccountContentScreen(
 
         StrengthPasswordLabel(
             modifier = Modifier.padding(vertical = 12.dp),
-            strengthPassword = StrengthPassword.VeryStrongPassword
+            strengthPassword = uiState.passwordData.passwordStrength
         )
 
         Text(
@@ -271,16 +282,28 @@ private fun CreateAccountContentScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         InputField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
+            modifier = Modifier.
+                onFocusChanged{ focusState ->
+                    if (focusState.hasFocus) {
+                        repeatPasswordInputTouched.value = true
+                    }
+                    if(repeatPasswordInputTouched.value && !focusState.hasFocus){
+                        onPasswordRepeatableCheck(uiState.repeatPasswordData.repeatedPassword)
+                    }
+                },
+            value = uiState.repeatPasswordData.repeatedPassword,
+            onValueChange = {
+                onPasswordRepeatableCheck(it)
+            },
             label = "Powtórz hasło",
-            placeholder = "Minimum 8 znaków",
+            placeholder = "Powtórz hasło",
             leadingIcon = Icons.Outlined.Lock,
             trailingIcon = if (isConfirmPasswordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
             onTrailingIconClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
             visualTransformation = if (isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             containerColor = MaterialTheme.colorScheme.surface,
-            errorText = "Hasła muszą być identyczne",
+            errorText = uiState.repeatPasswordData.repeatedPasswordError,
+            isError = uiState.repeatPasswordData.isError,
             onDone = { focusManager.clearFocus() },
             imeAction = ImeAction.Done
         )
@@ -292,12 +315,12 @@ private fun CreateAccountContentScreen(
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(
-                    if (enableButton) MaterialTheme.colorScheme.primary else SurfaceContainerHighestDark,
+                    if (uiState.isFormValid) MaterialTheme.colorScheme.primary else SurfaceContainerHighestDark,
                     MaterialTheme.shapes.large
                 )
                 .clickable(
                     onClick = {},
-                    enabled = enableButton
+                    enabled = uiState.isFormValid
                 ),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
